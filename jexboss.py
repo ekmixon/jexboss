@@ -18,6 +18,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 import textwrap
 import traceback
 import logging
@@ -35,7 +36,12 @@ import argparse, socket
 from sys import argv, exit, version_info
 logging.captureWarnings(True)
 FORMAT = "%(asctime)s (%(levelname)s): %(message)s"
-logging.basicConfig(filename='jexboss_'+str(datetime.datetime.today().date())+'.log', format=FORMAT, level=logging.INFO)
+logging.basicConfig(
+    filename=f'jexboss_{str(datetime.datetime.now().date())}.log',
+    format=FORMAT,
+    level=logging.INFO,
+)
+
 
 __author__ = "João Filho Matos Figueiredo <joaomatosf@gmail.com>"
 __version__ = "1.2.4"
@@ -138,7 +144,11 @@ def is_proxy_ok():
     except:
         print_and_flush(RED + " * Error: Failed to connect to %s using proxy %s.\n"
                               "   See logs for more details...\n" %(gl_args.host,gl_args.proxy) + ENDC)
-        logging.warning("Failed to connect to %s using proxy" %gl_args.host, exc_info=traceback)
+        logging.warning(
+            f"Failed to connect to {gl_args.host} using proxy",
+            exc_info=traceback,
+        )
+
         return False
 
     if r.status == 407:
@@ -148,7 +158,7 @@ def is_proxy_ok():
         logging.error("Proxy authentication failed")
         return False
 
-    elif r.status == 503 or r.status == 502:
+    elif r.status in [503, 502]:
         print_and_flush(RED + " * Error %s: The service %s is not availabel to your proxy. \n"
                               "   See logs for more details...\n" %(r.status,gl_args.host)+ENDC)
         logging.error("Service unavailable to your proxy")
@@ -161,7 +171,7 @@ def configure_http_pool():
 
     global gl_http_pool
 
-    if gl_args.mode == 'auto-scan' or gl_args.mode == 'file-scan':
+    if gl_args.mode in ['auto-scan', 'file-scan']:
         timeout = Timeout(connect=1.0, read=3.0)
     else:
         timeout = Timeout(connect=gl_args.timeout, read=6.0)
@@ -205,10 +215,10 @@ def check_connectivity(host, port):
         s.connect((str(host), int(port)))
         s.close()
     except socket.timeout:
-        logging.info("Failed to connect to %s:%s" %(host,port))
+        logging.info(f"Failed to connect to {host}:{port}")
         return False
     except:
-        logging.info("Failed to connect to %s:%s" % (host, port))
+        logging.info(f"Failed to connect to {host}:{port}")
         return False
 
     return True

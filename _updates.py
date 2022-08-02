@@ -18,6 +18,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+
 RED = '\x1b[91m'
 RED1 = '\033[31m'
 BLUE = '\033[94m'
@@ -35,7 +36,12 @@ import traceback
 import logging, datetime
 logging.captureWarnings(True)
 FORMAT = "%(asctime)s (%(levelname)s): %(message)s"
-logging.basicConfig(filename='jexboss_'+str(datetime.datetime.today().date())+'.log', format=FORMAT, level=logging.INFO)
+logging.basicConfig(
+    filename=f'jexboss_{str(datetime.datetime.now().date())}.log',
+    format=FORMAT,
+    level=logging.INFO,
+)
+
 
 
 
@@ -57,23 +63,32 @@ def auto_update():
     # backup of prior version7
     if os.path.exists('old_version'):
         shutil.rmtree('old_version')
-    shutil.copytree(".", "." + os.path.sep + "old_version")
+    shutil.copytree(".", f".{os.path.sep}old_version")
 
     # download and extract of new version
-    jexboss.print_and_flush(GREEN + " * Downloading the new version from %s." %url +ENDC )
+    jexboss.print_and_flush(
+        GREEN + f" * Downloading the new version from {url}." + ENDC
+    )
+
     r = gl_http_pool.request('GET', url)
     if r.status != 200:
-        jexboss.print_and_flush(RED + " * Error: Could not complete the download of the new version. Check your internet connection." + ENDC)
+        jexboss.print_and_flush(
+            f"{RED} * Error: Could not complete the download of the new version. Check your internet connection.{ENDC}"
+        )
+
         return False
     with open('master.zip', 'wb') as f:
         f.write(r.data)
     z = ZipFile('master.zip', 'r')
-    jexboss.print_and_flush(GREEN + " * Extracting new version..." +ENDC)
+    jexboss.print_and_flush(f"{GREEN} * Extracting new version...{ENDC}")
     z.extractall(path='.')
     z.close()
     os.remove('master.zip')
-    path_new_version = '.' + os.path.sep + 'jexboss-master'
-    jexboss.print_and_flush(GREEN + " * Replacing the current version with the new version..."  + ENDC)
+    path_new_version = f'.{os.path.sep}jexboss-master'
+    jexboss.print_and_flush(
+        f"{GREEN} * Replacing the current version with the new version...{ENDC}"
+    )
+
     for root, dirs, files in os.walk(path_new_version):
         for file in files:
             old_path = root.replace(path_new_version, '.') + os.path.sep
@@ -85,7 +100,7 @@ def auto_update():
 
             shutil.move(new_file, old_file)
     # remove extracted directory of the new version
-    shutil.rmtree('.'+os.path.sep+'jexboss-master')
+    shutil.rmtree(f'.{os.path.sep}jexboss-master')
 
     return True
 
@@ -108,7 +123,7 @@ def check_updates():
 
     if r.status != 200:
         jexboss.print_and_flush(RED + " * Error: could not check for updates ...\n" + ENDC)
-        logging.warning("Failed to check for updates. HTTP Code: %s" % r.status)
+        logging.warning(f"Failed to check for updates. HTTP Code: {r.status}")
         return False
     else:
         current_version = jexboss.__version__
@@ -131,14 +146,14 @@ def check_updates():
             elif 'version:' in line and 'last_' not in line:
                 break
         # compare last_version with current version
-        tup = lambda x: [int(y) for y in (x + '.0.0.0').split('.')][:3]
+        tup = lambda x: [int(y) for y in f'{x}.0.0.0'.split('.')][:3]
         if tup(last_version) > tup(current_version):
             jexboss.print_and_flush (
             GREEN + BOLD + " * NEW VERSION AVAILABLE: JexBoss v%s (%s)\n" % (last_version, date_last_version) + ENDC +
             GREEN + "   * Link: %s\n" % link +
             GREEN + "   * Release notes:")
             for note in notes:
-                jexboss.print_and_flush ("      %s" % note)
+                jexboss.print_and_flush(f"      {note}")
             return True
         else:
             return False

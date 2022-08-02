@@ -16,6 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+
 from argparse import ArgumentParser
 from csv import DictWriter
 
@@ -50,7 +51,7 @@ for url in urls:
 
     url_results = check_vul(url)
     for key in url_results.keys():
-        if url_results[key] == 200 or url_results[key] == 500:
+        if url_results[key] in [200, 500]:
             full_url = "{0}{1}".format(url, paths[key])
             result = dict(base_url=url, vulnerability=key, full_url=full_url, status_code=url_results[key])
             results.append(result)
